@@ -507,7 +507,7 @@ df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt', sep='\t', in
 
 # Cleaning
 print ('\n' + 'Removing temp files...' + '\n')
-subprocess.Popen('rm -r ./' + str(firstarg) + '/tmp-files', shell=True).wait()
+subprocess.Popen('rm -r ./' + str(fourtarg) + '/tmp-files', shell=True).wait()
 
 # Cleaning
 print ('\n' + 'Pairwise Pipeline Complete...' + '\n')
