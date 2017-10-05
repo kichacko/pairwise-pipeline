@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/py
 
 #  alignment-pipeline.py
 #
@@ -323,8 +323,6 @@ df3 = df3[['PROKKA-ID',
            'Codon'
     ]]
 
-df3
-
 df = pd.merge(df, df2, on=['PROKKA-ID'], how='inner')
 df = pd.concat([df, df3])
 
@@ -343,3 +341,174 @@ df = df[['PROKKA-ID',
 
 df = df.sort_values(by = ['Ref-Contig', 'Ref-Start'], ascending = [1, 1])
 df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SNVs.txt', sep='\t', index=False, header= None)
+
+
+# Preparing Annovar Input for SV
+print ('\n' + 'Annotating SV Variants...' + '\n')
+print ('\n' + 'Converting NucDIFF to Annovar...' + '\n')
+with open('./' + str(fourtarg) + '/NucDIFF/results/NucDIFF_ref_struct.gff') as inFile:
+    with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile:
+        for line in inFile:
+
+            line = line.replace(';', '\t', 3)
+            line = line.replace('ID=', '')
+            line = line.replace('Name=', '')
+            line = line.replace('subst_len=', '')
+            line = line.replace('ins_len=', '')
+            line = line.replace('del_len=', '')
+            line = line.replace('overlap_len=', '')            
+            line = line.replace('query_dir=', '')
+            line = line.replace('query_sequence=', '')
+            line = line.replace('query_coord=', '')
+            line = line.replace('query_bases=', '')
+            line = line.replace('ref_bases=', '')
+            line = line.replace('color=', '')
+                  
+            if line.startswith('#'):
+                pass
+            
+            else:
+                outFile.write(line)
+
+df = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+
+df.columns = [
+    "Ref-Contig",
+    "NucDiff-Version",
+    "SO-Number",
+    "Ref-Start",
+    "Ref-End",
+    "Gap_1",
+    "Gap_2",
+    "Gap_3",
+    "SV-ID",
+    "Substitution-Type",
+    "Substitution-Length",
+    "Other"
+    ]
+
+df['Ref-Base'] = 0
+df['Query-Base']= 0
+
+df.ix[(df['Substitution-Type'] == 'insertion'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'duplication'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'relocation-insertion'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'relocation-insertion'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'relocation-overlap'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'translocation-overlap'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'translocation-insertion'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'collapsed_repeat'), ['Ref-Base', 'Query-Base']] = ['0', '-']
+df.ix[(df['Substitution-Type'] == 'deletion'), ['Ref-Base', 'Query-Base']] = ['0', '-']
+df.ix[(df['Substitution-Type'] == 'substitution'), ['Ref-Base', 'Query-Base']] = ['0', '0']
+df.ix[(df['Substitution-Type'] == 'unaligned_beginning'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+df.ix[(df['Substitution-Type'] == 'unaligned_end'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+
+df = df.loc[:, ['Ref-Contig','Ref-Start','Ref-End', 'Ref-Base', 'Query-Base', 'Substitution-Type', 'Substitution-Length']]            
+df.to_csv('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt', sep='\t', index=False, header = True)
+
+# Run Annovar
+print ('\n' + 'Running Annovar...' + '\n')
+subprocess.Popen('annotate_variation.pl -buildver ' + str(fourtarg) + ' ./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt ./' + str(fourtarg) + '/Annovar/', shell=True).wait()
+
+# Creating Output Files
+print ('\n' + 'Creating Output Files...' + '\n')
+with open('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt.exonic_variant_function') as inFile:
+    with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile:
+        for line in inFile:
+            
+            line = line.replace(':', '\t', 1)
+            outFile.write(line)
+
+df = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+
+df.columns = [
+    "Line",
+    "Variant-Effect",
+    "PROKKA-ID",
+    "Variant-in-Gene",
+    "Ref-Contig",
+    "Ref-Start",
+    "Ref-End",
+    "Start-NT",
+    "End-NT",
+    "Variant-Type",
+    "Variant-Length"
+    ]
+
+df['Codon'] = df['Variant-in-Gene'].str.split(':p.').str[-1]
+
+df = df[['PROKKA-ID', 
+    "Variant-Effect",
+    "Ref-Contig",
+    "Ref-Start",
+    "Ref-End",
+    "Start-NT",
+    "End-NT",
+    "Variant-Type",
+    "Variant-Length",
+    "Codon"
+        ]]
+
+# Load Variant Function file
+with open('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt.variant_function') as inFile3:
+    with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile3:
+        for line in inFile3:
+            if line.startswith('exonic'):
+                pass
+            else:
+                outFile3.write(line)
+
+df2 = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+
+df2.columns = ['Variant-Effect', 
+    "PROKKA-ID",
+    "Ref-Contig",
+    "Ref-Start",
+    "Ref-End",
+    "Start-NT",
+    "End-NT",
+    "Variant-Type",
+    "Variant-Length"
+        ]
+
+df2['Description'] = 'Non-Coding Region'
+df2['Codon'] = 'n/a'
+
+df2 = df2[['PROKKA-ID',
+           'Variant-Effect',
+           'Ref-Contig',
+           'Ref-Start',
+           'Ref-End',
+           'Start-NT',
+           'End-NT',
+           'Variant-Type',
+           'Variant-Length',
+           'Description',
+           'Codon'
+    ]]
+
+df = pd.concat([df, df2])
+
+df = df[['PROKKA-ID',
+           'Variant-Effect',
+           'Ref-Contig',
+           'Ref-Start',
+           'Ref-End',
+           'Start-NT',
+           'End-NT',
+           'Variant-Type',
+           'Variant-Length',
+           'Description',
+           'Codon'
+    ]]
+
+df = df.sort_values(by = ['Ref-Contig', 'Ref-Start'], ascending = [1, 1])
+df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt', sep='\t', index=False, header= True)
+
+# Cleaning
+print ('\n' + 'Removing temp files...' + '\n')
+subprocess.Popen('rm -r ./' + str(firstarg) + '/tmp-files', shell=True).wait()
+
+# Cleaning
+print ('\n' + 'Pairwise Pipeline Complete...' + '\n')
+print ('\n' + 'Author: Kieran Chacko...' + '\n')
