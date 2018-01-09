@@ -52,7 +52,7 @@ df = df.drop_duplicates(subset = ['Ref-PROKKA_ID', 'Ref-Start', 'Ref-End', 'Quer
 
 # Output Files
 print ('\n' + 'Writing output files...' + '\n')
-df.to_csv('./' + str(thirdarg) + '_vs_' + str(fourtarg) + '_Unique-Variants.txt', sep='\t', index=False, header=False)
+df.to_csv('./' + str(thirdarg) + '_vs_' + str(fourtarg) + '_Unique-Variants.txt', sep='\t', index=False, header=True)
 
 # Finish
 print ('\n' + 'Finding unique variants complete...' + '\n')
