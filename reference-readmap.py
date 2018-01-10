@@ -1,6 +1,6 @@
 #!/bin/py
 
-#  alignment-pipeline.py
+#  reference-readmap.py
 #
 #
 #  Created by Kieran Chacko on 10/02/17.
@@ -272,8 +272,9 @@ df3.columns = ['Variant-Effect',
     "Ref-End",
     "Start-NT",
     "End-NT",
-    "Variant-Type",
-    "Variant-Length"
+    "Quality-1",
+    "Quality-2",
+    "Quality-3"
         ]
 
 df3['Description'] = 'Non-Coding Region'
@@ -286,8 +287,6 @@ df3 = df3[['PROKKA-ID',
            'Ref-End',
            'Start-NT',
            'End-NT',
-           'Variant-Type',
-           'Variant-Length',
            'Description',
            'Codon'
     ]]
@@ -302,8 +301,6 @@ df = df[['PROKKA-ID',
            'Ref-End',
            'Start-NT',
            'End-NT',
-           'Variant-Type',
-           'Variant-Length',
            'Description',
            'Codon'
     ]]
