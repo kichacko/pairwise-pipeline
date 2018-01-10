@@ -33,10 +33,8 @@ columns = [
     "Ref-End",
     "Ref-NT",
     "Query-NT",
-    "Variant_Type",
-    "GAP",
     "Description",
-    "Mutation"
+    "Codon"
     ]
 
 df_1.columns = columns
@@ -48,7 +46,7 @@ df_2['Isolate'] = str(fourtarg)
 # Combine Data
 print ('\n' + 'Finding unique variants...' + '\n')
 df = pd.concat([df_1, df_2], ignore_index=True)
-df = df.drop_duplicates(subset = ['Ref-PROKKA_ID', 'Ref-Start', 'Ref-End', 'Query-NT', 'Variant_Type', 'Mutation'], keep = False )
+df = df.drop_duplicates(subset = ['Ref-PROKKA_ID', 'Ref-Start', 'Ref-End', 'Query-NT', 'Mutation_Type', 'Codon'], keep = False )
 
 # Output Files
 print ('\n' + 'Writing output files...' + '\n')
