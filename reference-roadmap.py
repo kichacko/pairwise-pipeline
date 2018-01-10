@@ -203,8 +203,9 @@ df.columns = [
     "Ref-End",
     "Start-NT",
     "End-NT",
-    "Variant-Type",
-    "Variant-Length"
+    "Quality-1",
+    "Quality-2",
+    "Quality-3"
     ]
 
 df['Codon'] = df['Variant-in-Gene'].str.split(':p.').str[-1]
@@ -216,9 +217,7 @@ df = df[['PROKKA-ID',
     "Ref-End",
     "Start-NT",
     "End-NT",
-    "Variant-Type",
-    "Variant-Length",
-    "Codon",
+    "Codon"
         ]]
 
 # Load GFF files
