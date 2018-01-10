@@ -47,7 +47,7 @@ subprocess.Popen('freebayes -f ' + str(firstarg) + ' ' + str(fourtarg) + '.bam >
 
 # Filter variants with default settings of bcftools
 print ('\n' + 'Filtering variants with BCFTOOLS...' + '\n')
-subprocess.Popen('vcfutils.pl varFilter ' + ' ' + str(fourtarg) + '.vcf' + ' > ' + ' ' + str(fourtarg) + '.filter', shell=True).wait()
+subprocess.Popen('vcfutils.pl varFilter -Q 100' + ' ' + str(fourtarg) + '.vcf' + ' > ' + ' ' + str(fourtarg) + '.filter', shell=True).wait()
 
 # Prepare Annovar Input
 print ('\n' + 'Creating ANNOVAR Input...' + '\n')
