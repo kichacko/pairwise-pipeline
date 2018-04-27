@@ -300,70 +300,77 @@ else:
             ]
 
         df2 = df2[['PROKKA-ID', 'Description']]
+        df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SNVs.txt', sep='\t', index=False, header= None)
 
         # Load Variant Function file
         
-        if os.path.getsize('./' + str(fourtarg) + '/Annovar/Annovar_Input.txt.variant_function') == 0:
-            print ('\n' + 'There were not synonymous SNP variants found by Annovar. Skipping to structural variants...' + '\n')
-    
-        else:
-            print ('\n' + 'Creating synonymous variant output files...' + '\n')
+    if os.path.getsize('./' + str(fourtarg) + '/Annovar/Annovar_Input.txt.variant_function') == 0:
+        print ('\n' + 'There were not synonymous SNP variants found by Annovar. Skipping to structural variants...' + '\n')
+
+    else:
+        print ('\n' + 'Creating synonymous variant output files...' + '\n')
+
+        with open('./' + str(fourtarg) + '/Annovar/Annovar_Input.txt.variant_function') as inFile3:
+            with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile3:
+                for line in inFile3:
+                    if line.startswith('exonic'):
+                        pass
+                    else:
+                        outFile3.write(line)
+
+        df3 = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+
+        df3.columns = ['Variant-Effect', 
+            "PROKKA-ID",
+            "Ref-Contig",
+            "Ref-Start",
+            "Ref-End",
+            "Start-NT",
+            "End-NT",
+            "Variant-Type",
+            "Variant-Length"
+                ]
+
+        df3['Description'] = 'Non-Coding Region'
+        df3['Codon'] = 'n/a'
+
+        df3 = df3[['PROKKA-ID',
+                   'Variant-Effect',
+                   'Ref-Contig',
+                   'Ref-Start',
+                   'Ref-End',
+                   'Start-NT',
+                   'End-NT',
+                   'Variant-Type',
+                   'Variant-Length',
+                   'Description',
+                   'Codon'
+            ]]
         
-            with open('./' + str(fourtarg) + '/Annovar/Annovar_Input.txt.variant_function') as inFile3:
-                with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile3:
-                    for line in inFile3:
-                        if line.startswith('exonic'):
-                            pass
-                        else:
-                            outFile3.write(line)
+        if os.path.isfile('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SNVs.txt') == True:
+            df2 = pd.read_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SNVs.txt', sep='\t', header = None)
+           
+        else:
+            df2 = pd.DataFrame(columns=['PROKKA-ID', 'Description'])
+            
+        df = pd.merge(df, df2, on=['PROKKA-ID'], how='inner')
+        df = pd.concat([df, df3])
 
-            df3 = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+        df = df[['PROKKA-ID',
+                   'Variant-Effect',
+                   'Ref-Contig',
+                   'Ref-Start',
+                   'Ref-End',
+                   'Start-NT',
+                   'End-NT',
+                   'Variant-Type',
+                   'Variant-Length',
+                   'Description',
+                   'Codon'
+            ]]
 
-            df3.columns = ['Variant-Effect', 
-                "PROKKA-ID",
-                "Ref-Contig",
-                "Ref-Start",
-                "Ref-End",
-                "Start-NT",
-                "End-NT",
-                "Variant-Type",
-                "Variant-Length"
-                    ]
-
-            df3['Description'] = 'Non-Coding Region'
-            df3['Codon'] = 'n/a'
-
-            df3 = df3[['PROKKA-ID',
-                       'Variant-Effect',
-                       'Ref-Contig',
-                       'Ref-Start',
-                       'Ref-End',
-                       'Start-NT',
-                       'End-NT',
-                       'Variant-Type',
-                       'Variant-Length',
-                       'Description',
-                       'Codon'
-                ]]
-
-            df = pd.merge(df, df2, on=['PROKKA-ID'], how='inner')
-            df = pd.concat([df, df3])
-
-            df = df[['PROKKA-ID',
-                       'Variant-Effect',
-                       'Ref-Contig',
-                       'Ref-Start',
-                       'Ref-End',
-                       'Start-NT',
-                       'End-NT',
-                       'Variant-Type',
-                       'Variant-Length',
-                       'Description',
-                       'Codon'
-                ]]
-
-            df = df.sort_values(by = ['Ref-Contig', 'Ref-Start'], ascending = [1, 1])
-            df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SNVs.txt', sep='\t', index=False, header= None)
+        df = df.sort_values(by = ['Ref-Contig', 'Ref-Start'], ascending = [1, 1])
+        df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SNVs.txt', sep='\t', index=False, header= None)
 
 
 # Structural Variants
@@ -430,6 +437,7 @@ else:
     df.ix[(df['Substitution-Type'] == 'substitution'), ['Ref-Base', 'Query-Base']] = ['0', '0']
     df.ix[(df['Substitution-Type'] == 'unaligned_beginning'), ['Ref-Base', 'Query-Base']] = ['-', '0']
     df.ix[(df['Substitution-Type'] == 'unaligned_end'), ['Ref-Base', 'Query-Base']] = ['-', '0']
+    df.ix[(df['Substitution-Type'] == 'inversion'), ['Ref-Base', 'Query-Base']] = ['0', '0']
 
     df = df.loc[:, ['Ref-Contig','Ref-Start','Ref-End', 'Ref-Base', 'Query-Base', 'Substitution-Type', 'Substitution-Length']]            
     df.to_csv('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt', sep='\t', index=False, header = True)
@@ -480,69 +488,88 @@ else:
             "Variant-Length",
             "Codon"
                 ]]
-
-        # Load Variant Function file
         
-        if os.path.getsize('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt.exonic_variant_function') == 0:
-            print ('\n' + 'There were no synonymous SVs found by Annovar. Skipping to end...' + '\n')
-    
+        df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt', sep='\t', index=False, header= True)
+
+    # Load Variant Function file
+        
+    if os.path.getsize('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt.exonic_variant_function') == 0:
+        print ('\n' + 'There were no synonymous SVs found by Annovar. Skipping to end...' + '\n')
+
+    else:
+        print ('\n' + 'Creating synonymous SV output files...' + '\n')
+
+        with open('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt.variant_function') as inFile3:
+            with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile3:
+                for line in inFile3:
+                    if line.startswith('exonic'):
+                        pass
+                    else:
+                        outFile3.write(line)
+
+        df2 = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+
+        df2.columns = ['Variant-Effect', 
+            "PROKKA-ID",
+            "Ref-Contig",
+            "Ref-Start",
+            "Ref-End",
+            "Start-NT",
+            "End-NT",
+            "Variant-Type",
+            "Variant-Length"
+                ]
+
+        df2['Description'] = 'Non-Coding Region'
+        df2['Codon'] = 'n/a'
+
+        df2 = df2[['PROKKA-ID',
+                   'Variant-Effect',
+                   'Ref-Contig',
+                   'Ref-Start',
+                   'Ref-End',
+                   'Start-NT',
+                   'End-NT',
+                   'Variant-Type',
+                   'Variant-Length',
+                   'Description',
+                   'Codon'
+            ]]
+        
+        if os.path.isfile('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt') == True:
+            df = pd.read_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt', sep='\t', header = None)
+           
         else:
-            print ('\n' + 'Creating synonymous SV output files...' + '\n')
-        
-            with open('./' + str(fourtarg) + '/Annovar/Annovar_SV_Input.txt.variant_function') as inFile3:
-                with open('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', 'w') as outFile3:
-                    for line in inFile3:
-                        if line.startswith('exonic'):
-                            pass
-                        else:
-                            outFile3.write(line)
+            df = pd.DataFrame(columns=['PROKKA-ID',
+                   'Variant-Effect',
+                   'Ref-Contig',
+                   'Ref-Start',
+                   'Ref-End',
+                   'Start-NT',
+                   'End-NT',
+                   'Variant-Type',
+                   'Variant-Length',
+                   'Description',
+                   'Codon'
+            ])
 
-            df2 = pd.read_csv('./' + str(fourtarg) + '/tmp-files/tmp-file.txt', sep='\t', header = None)
+        df = pd.concat([df, df2])
 
-            df2.columns = ['Variant-Effect', 
-                "PROKKA-ID",
-                "Ref-Contig",
-                "Ref-Start",
-                "Ref-End",
-                "Start-NT",
-                "End-NT",
-                "Variant-Type",
-                "Variant-Length"
-                    ]
+        df = df[['PROKKA-ID',
+                   'Variant-Effect',
+                   'Ref-Contig',
+                   'Ref-Start',
+                   'Ref-End',
+                   'Start-NT',
+                   'End-NT',
+                   'Variant-Type',
+                   'Variant-Length',
+                   'Description',
+                   'Codon'
+            ]]
 
-            df2['Description'] = 'Non-Coding Region'
-            df2['Codon'] = 'n/a'
-
-            df2 = df2[['PROKKA-ID',
-                       'Variant-Effect',
-                       'Ref-Contig',
-                       'Ref-Start',
-                       'Ref-End',
-                       'Start-NT',
-                       'End-NT',
-                       'Variant-Type',
-                       'Variant-Length',
-                       'Description',
-                       'Codon'
-                ]]
-
-            df = pd.concat([df, df2])
-
-            df = df[['PROKKA-ID',
-                       'Variant-Effect',
-                       'Ref-Contig',
-                       'Ref-Start',
-                       'Ref-End',
-                       'Start-NT',
-                       'End-NT',
-                       'Variant-Type',
-                       'Variant-Length',
-                       'Description',
-                       'Codon'
-                ]]
-
-            df = df.sort_values(by = ['Ref-Contig', 'Ref-Start'], ascending = [1, 1])
-            df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt', sep='\t', index=False, header= True)
+        df = df.sort_values(by = ['Ref-Contig', 'Ref-Start'], ascending = [1, 1])
+        df.to_csv('./' + str(fourtarg) + '/' + str(fourtarg) +  '_SVs.txt', sep='\t', index=False, header= True)
 
 # Cleaning
 print ('\n' + 'Removing temp files...' + '\n')
