@@ -24,7 +24,7 @@ fourtarg=sys.argv[4]    # Prefix
 if os.path.getsize(str(firstarg)) == 0 or \
     os.path.getsize(str(seconarg)) == 0 or \
     os.path.getsize(str(thirdarg)) == 0 or \
-    os.path.getsize(str(fourtarg)) == 0:
+    len(str(fourtarg)) == 0:
         print ("One of your input files is empty")
         quit()
 
